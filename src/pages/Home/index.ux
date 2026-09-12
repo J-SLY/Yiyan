@@ -1,0 +1,52 @@
+<script lang="ts">
+  import router from '@blueos.app.appmanager.router'
+  export default {
+    data: {
+      title: '一言',
+    },
+
+    onInit() {},
+    gotoGetYiyan() {
+      router.push({
+        uri: '/pages/Detail',
+        params: {
+          type: 'get',
+          text: 'Loading...',
+        },
+      })
+    },
+    gotoHistory() {
+      router.push({
+        uri: '/pages/History',
+      })
+    },
+    gotoStars() {
+      router.push({
+        uri: '/pages/Stars',
+      })
+    },
+    gotoSettings() {
+      router.push({
+        uri: '/pages/Settings',
+      })
+    },
+  }
+</script>
+
+<template>
+  <div class="wrapper">
+    <text class="title">{{ title }}</text>
+    <input
+      class="btn"
+      type="button"
+      value="获取一言"
+      onclick="gotoGetYiyan()" />
+    <input class="btn" type="button" value="历史记录" onclick="gotoHistory()" />
+    <input class="btn" type="button" value="我的收藏" onclick="gotoStars()" />
+    <input class="btn" type="button" value="设置" onclick="gotoSettings()" />
+  </div>
+</template>
+
+<style lang="scss">
+  @import './../../assets/styles/global.scss';
+</style>

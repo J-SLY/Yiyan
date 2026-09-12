@@ -1,0 +1,25 @@
+@import './style.scss';
+.wrapper {
+  @include flex-box-mixins(column, center, center);
+  .title {
+    font-size: 7 * $size-factor;
+    text-align: center;
+    color: $white;
+  }
+  .text {
+    width: 90%;
+    font-size: 5 * $size-factor;
+    text-align: center;
+    color: $white;
+  }
+
+  .btn {
+    width: 55 * $size-factor;
+    height: 12 * $size-factor;
+    border-radius: 7 * $size-factor;
+    background-color: $brand;
+    color: $white;
+    font-size: 5 * $size-factor;
+    margin-top: 7 * $size-factor;
+  }
+}

@@ -1,0 +1,77 @@
+<script>
+  import fetch from '@blueos.network.fetch'
+  import prompt from '@blueos.window.prompt'
+  export default {
+    data: {
+      type: '',
+      text: '',
+      star: false,
+      canStar: true,
+    },
+    onInit() {
+      if (this.$app.$def.include('stars', this.text)) {
+        this.star = true
+      }
+      if (this.type === 'get') {
+        this.getYiyan()
+      }
+    },
+    getYiyan() {
+      this.text = 'Loading...'
+      this.canStar = false
+      fetch.fetch({
+        url: 'https://uapis.cn/api/v1/saying',
+        responseType: 'json',
+        success: (res) => {
+          this.canStar = true
+          const record = this.$app.$def
+          const text = res.data.text
+          this.text = text
+          record.push('history', text)
+          if (record.include('stars', text)) {
+            this.star = true
+          }
+        },
+      })
+    },
+    giveStar() {
+      const record = this.$app.$def
+      if (record.include('stars', this.text)) {
+        record.dele('stars', this.text)
+        this.star = false
+        prompt.showToast({
+          message: '取消收藏成功',
+        })
+      } else {
+        record.push('stars', this.text)
+        this.star = true
+        prompt.showToast({
+          message: '已收藏成功',
+        })
+      }
+    },
+  }
+</script>
+
+<template>
+  <div class="wrapper">
+    <text class="text">{{ text }}</text>
+    <input
+      type="button"
+      class="btn"
+      value="换一条"
+      show="{{type=='get'}}"
+      disabled="{{text=='Loading...'}}"
+      @click="getYiyan" />
+    <input
+      type="button"
+      class="btn"
+      value="{{star?'取消收藏':'收藏'}}"
+      disabled="{{!canStar}}"
+      @click="giveStar" />
+  </div>
+</template>
+
+<style lang="scss">
+  @import './../../assets/styles/global.scss';
+</style>

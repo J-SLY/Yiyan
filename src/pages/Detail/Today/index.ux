@@ -1,0 +1,19 @@
+<template>
+  <div class="wrapper">
+    <text class="title">{{ title }}</text>
+  </div>
+</template>
+
+<script>
+  export default {
+    data: {
+      title: '👏欢迎体验应用开发',
+    },
+
+    onInit() {},
+  }
+</script>
+
+<style lang="scss">
+  @import '../../../assets/styles/global.scss';
+</style>

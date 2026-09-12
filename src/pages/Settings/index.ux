@@ -1,0 +1,22 @@
+<template>
+  <div class="wrapper">
+    <text class="title">设置</text>
+
+    <input class="btn" type="button" value="清除数据" onclick="gotoClear" />
+  </div>
+</template>
+
+<script>
+  import router from '@blueos.app.appmanager.router'
+  export default {
+    data: {},
+    onInit() {},
+    gotoClear() {
+      router.push({ uri: '/pages/Settings/Clear' })
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../assets/styles/global.scss';
+</style>

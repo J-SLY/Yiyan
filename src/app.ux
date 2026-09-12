@@ -1,0 +1,40 @@
+<script>
+  import storage from '@blueos.storage.storage'
+  export default {
+    data: {},
+    onCreate() {
+      const history = storage.getSync({ key: 'history' })
+      const stars = storage.getSync({ key: 'stars' })
+      if (history == '' || stars == '') {
+        this.set('history', [])
+        this.set('stars', [])
+      }
+    },
+    set(key, value) {
+      storage.set({
+        key: key,
+        value: JSON.stringify(value),
+      })
+    },
+    get(key) {
+      return JSON.parse(storage.getSync({ key: key }))
+    },
+    push(key, value) {
+      let data = this.get(key)
+      data.push(value)
+      if (key == 'history') {
+        if (data.length > 20) data = data.slice(-20)
+      }
+      this.set(key, data)
+    },
+    include(key, value) {
+      const data = this.get(key)
+      return data.includes(value)
+    },
+    dele(key, value) {
+      let data = this.get(key)
+      data = data.filter((v) => v != value)
+      this.set(key, data)
+    },
+  }
+</script>

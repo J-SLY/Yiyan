@@ -1,0 +1,83 @@
+<template>
+  <div class="wrapper">
+    <list>
+      <list-item type="title" class="ls-item">
+        <text class="title">历史记录</text>
+      </list-item>
+      <list-item for="{{history}}" class="ls-item">
+        <text class="ls-text" @click="show($item)">{{ $item }}</text>
+        <div slot="right" class="right-slot">
+          <input
+            type="button"
+            class="list-btn"
+            @click="del($item)"
+            value="删除" />
+        </div>
+      </list-item>
+    </list>
+  </div>
+</template>
+
+<script>
+  import router from '@blueos.app.appmanager.router'
+  export default {
+    data: {
+      history: [],
+    },
+
+    onInit() {
+      this.getData()
+    },
+    getData() {
+      const record = this.$app.$def
+      const history = record.get('history').reverse()
+      this.history = history
+    },
+    show(item) {
+      router.push({
+        uri: '/pages/Detail',
+        params: {
+          type: 'showHistory',
+          text: item,
+        },
+      })
+    },
+    del(item) {
+      this.$app.$def.dele('history', item)
+      this.getData()
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import './../../assets/styles/global.scss';
+  .ls-item {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+  }
+  .ls-text {
+    width: 90%;
+    font-size: 5 * $size-factor;
+    text-align: center;
+    color: $white;
+    background-color: #333333;
+    border-radius: 20px;
+    margin: 10px;
+    line-height: 8 * $size-factor;
+  }
+  .right-slot {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding-right: 10px;
+  }
+  .list-btn {
+    height: 80%;
+    width: 20%;
+    border-radius: 20px;
+    background-color: #333333;
+    font-size: 25px;
+    color: #ffffff;
+  }
+</style>

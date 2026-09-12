@@ -1,0 +1,57 @@
+<template>
+  <div class="wrapper">
+    <text class="title">清除数据</text>
+    <input
+      class="warn-btn"
+      type="button"
+      value="！清空历史！"
+      onclick="clear('history')" />
+    <input
+      class="warn-btn"
+      type="button"
+      value="！清空收藏！"
+      onclick="clear('stars')" />
+  </div>
+</template>
+
+<script>
+  import prompt from '@blueos.window.prompt'
+  export default {
+    data: {
+      lastClickItem: '',
+      lastClickTime: -1,
+    },
+
+    onInit() {},
+    clear(type) {
+      const now = Date.now()
+      const lastClick = this.lastClickItem
+      const lastTime = this.lastClickTime
+      if (lastClick == type && now - lastTime > 500 && now - lastTime < 3000) {
+        this.$app.$def.set(type, [])
+        prompt.showToast({
+          message: `成功清除${type == 'history' ? '历史记录' : '收藏记录'}`,
+        })
+      } else {
+        this.lastClickTime = Date.now()
+        this.lastClickItem = type
+        prompt.showToast({
+          message: '再次点击以清除',
+        })
+      }
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import '../../../assets/styles/global.scss';
+  .warn-btn {
+    width: 55 * $size-factor;
+    height: 12 * $size-factor;
+    border-radius: 7 * $size-factor;
+    background-color: $brand;
+    color: $red;
+    font-size: 5 * $size-factor;
+    margin-top: 7 * $size-factor;
+  }
+</style>

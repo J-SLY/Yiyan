@@ -1,0 +1,59 @@
+{
+  "package": "com.jsly.watch.yiyan.ng",
+  "name": "一言",
+  "versionName": "1.0.1",
+  "versionCode": 1,
+  "appCategory": [
+    "other"
+  ],
+  "icon": "/assets/images/logo.png",
+  "features": [
+    {
+      "name": "blueos.app.appmanager.router"
+    },
+    {
+      "name": "blueos.storage.storage"
+    },
+    {
+      "name": "blueos.network.fetch"
+    },
+    {
+      "name": "blueos.window.prompt"
+    }
+  ],
+  "deviceTypeList": [
+    "watch-square"
+  ],
+  "config": {
+    "designWidth": 466
+  },
+  "router": {
+    "entry": "pages/Home",
+    "pages": {
+      "pages/Home": {
+        "component": "index"
+      },
+      "pages/Detail": {
+        "component": "index"
+      },
+      "pages/History": {
+        "component": "index"
+      },
+      "pages/Stars": {
+        "component": "index"
+      },
+      "pages/Settings": {
+        "component": "index"
+      },
+      "pages/Settings/Clear": {
+        "component": "index"
+      },
+      "pages/Detail/Today": {
+        "component": "index"
+      }
+    }
+  },
+  "display": {
+    "backgroundColor": "#000000"
+  }
+}
