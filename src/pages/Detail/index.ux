@@ -23,6 +23,11 @@
         url: 'https://uapis.cn/api/v1/saying',
         responseType: 'json',
         success: (res) => {
+          if (!res || !res.data || typeof res.data.text !== 'string') {
+            this.text = '获取失败，请重试'
+            this.canStar = false
+            return
+          }
           this.canStar = true
           const record = this.$app.$def
           const text = res.data.text
@@ -32,12 +37,20 @@
             this.star = true
           }
         },
+        fail: () => {
+          this.text = '获取失败，请重试'
+          this.canStar = false
+        },
       })
     },
     giveStar() {
       const record = this.$app.$def
+      if (!this.text || this.text === 'Loading...' || this.text === '获取失败，请重试') {
+        return
+      }
       if (record.include('stars', this.text)) {
-        record.dele('stars', this.text)
+        const stars = record.get('stars')
+        record.dele('stars', stars.indexOf(this.text))
         this.star = false
         prompt.showToast({
           message: '取消收藏成功',

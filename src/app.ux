@@ -5,10 +5,8 @@
     onCreate() {
       const history = storage.getSync({ key: 'history' })
       const stars = storage.getSync({ key: 'stars' })
-      if (history == '' || stars == '') {
-        this.set('history', [])
-        this.set('stars', [])
-      }
+      if (history == '') this.set('history', [])
+      if (stars == '') this.set('stars', [])
     },
     set(key, value) {
       storage.set({
@@ -17,7 +15,14 @@
       })
     },
     get(key) {
-      return JSON.parse(storage.getSync({ key: key }))
+      const value = storage.getSync({ key: key })
+      if (value == '') return []
+      try {
+        const data = JSON.parse(value)
+        return Array.isArray(data) ? data : []
+      } catch (e) {
+        return []
+      }
     },
     push(key, value) {
       let data = this.get(key)
@@ -31,9 +36,9 @@
       const data = this.get(key)
       return data.includes(value)
     },
-    dele(key, value) {
+    dele(key, index) {
       let data = this.get(key)
-      data = data.filter((v) => v != value)
+      if (index >= 0 && index < data.length) data.splice(index, 1)
       this.set(key, data)
     },
   }

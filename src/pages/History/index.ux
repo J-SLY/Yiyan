@@ -10,7 +10,7 @@
           <input
             type="button"
             class="list-btn"
-            @click="del($item)"
+            @click="del($idx)"
             value="删除" />
         </div>
       </list-item>
@@ -42,8 +42,9 @@
         },
       })
     },
-    del(item) {
-      this.$app.$def.dele('history', item)
+    del(index) {
+      const history = this.$app.$def.get('history')
+      this.$app.$def.dele('history', history.length - 1 - index)
       this.getData()
     },
   }

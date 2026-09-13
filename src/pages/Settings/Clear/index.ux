@@ -32,6 +32,8 @@
         prompt.showToast({
           message: `成功清除${type == 'history' ? '历史记录' : '收藏记录'}`,
         })
+        this.lastClickItem = ''
+        this.lastClickTime = -1
       } else {
         this.lastClickTime = Date.now()
         this.lastClickItem = type
