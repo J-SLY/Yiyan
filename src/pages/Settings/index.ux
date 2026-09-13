@@ -1,8 +1,21 @@
 <template>
   <div class="wrapper">
     <text class="title">设置</text>
-    <input class="btn" type="button" value="内容模式" onclick="gotoApi" />
-    <input class="btn" type="button" value="清除数据" onclick="gotoClear" />
+    <input
+      class="btn"
+      type="button"
+      value="内容模式"
+      onclick="subpage('Api')" />
+    <input
+      class="btn"
+      type="button"
+      value="离线数据下载"
+      onclick="subpage('Offline')" />
+    <input
+      class="btn"
+      type="button"
+      value="清除数据"
+      onclick="subpage('Clear')" />
   </div>
 </template>
 
@@ -11,11 +24,8 @@
   export default {
     data: {},
     onInit() {},
-    gotoApi() {
-      router.push({ uri: '/pages/Settings/Api' })
-    },
-    gotoClear() {
-      router.push({ uri: '/pages/Settings/Clear' })
+    subpage(name) {
+      router.push({ uri: `/pages/Settings/${name}` })
     },
   }
 </script>

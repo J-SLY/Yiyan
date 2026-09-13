@@ -8,7 +8,9 @@
       source: '',
       author: '',
       date: '',
-      status: 'loading',
+      isLoading: true,
+      isReady: false,
+      isError: false,
       isStarred: false,
       canStar: false,
     },
@@ -32,7 +34,9 @@
         this.applySaying(cache)
         return
       }
-      this.status = 'loading'
+      this.isLoading = true
+      this.isReady = false
+      this.isError = false
       fetch.fetch({
         url: 'https://uapis.cn/api/v1/saying/random?mode=daily',
         responseType: 'json',
@@ -62,7 +66,9 @@
       this.source = saying.source || ''
       this.author = saying.author || ''
       this.date = saying.date || this.todayString()
-      this.status = this.content ? 'ready' : 'error'
+      this.isLoading = false
+      this.isReady = !!this.content
+      this.isError = !this.content
       this.updateStarState()
     },
 
@@ -71,7 +77,9 @@
         this.applySaying(cache)
         prompt.showToast({ message: '网络不可用，已显示缓存' })
       } else {
-        this.status = 'error'
+        this.isLoading = false
+        this.isReady = false
+        this.isError = true
         this.canStar = false
       }
     },
@@ -105,13 +113,13 @@
 <template>
   <div class="wrapper">
     <text class="title">今日一言</text>
-    <text class="date" show="{{status=='ready'}}">{{ date }}</text>
-    <text class="text" show="{{status=='ready'}}">{{ content }}</text>
-    <text class="meta" show="{{status=='ready' && source!=''}}">出处：{{ source }}</text>
-    <text class="meta" show="{{status=='ready' && author!=''}}">作者：{{ author }}</text>
-    <text class="state" show="{{status=='loading'}}">正在获取今日一言...</text>
-    <text class="state error" show="{{status=='error'}}">获取失败，请检查网络后重试</text>
-    <input class="btn" type="button" value="刷新今日一言" disabled="{{status=='loading'}}" onclick="retry" />
+    <text class="date" show="{{isReady}}">{{ date }}</text>
+    <text class="text" show="{{isReady}}">{{ content }}</text>
+    <text class="meta" show="{{isReady && source!=''}}">出处：{{ source }}</text>
+    <text class="meta" show="{{isReady && author!=''}}">作者：{{ author }}</text>
+    <text class="state" show="{{isLoading}}">正在获取今日一言...</text>
+    <text class="state error" show="{{isError}}">获取失败，请检查网络后重试</text>
+    <input class="btn" type="button" value="刷新今日一言" disabled="{{isLoading}}" onclick="retry" />
     <input class="btn" type="button" value="{{isStarred?'取消收藏':'收藏'}}" disabled="{{!canStar}}" onclick="giveStar" />
   </div>
 </template>

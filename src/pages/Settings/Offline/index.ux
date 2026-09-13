@@ -1,0 +1,231 @@
+<template>
+  <div class="wrapper">
+    <text class="title">离线数据下载</text>
+    <text class="status">{{ status }}</text>
+    <text class="meta" show="{{hasData}}">版本：{{ version }}</text>
+    <text class="meta" show="{{hasData}}">数量：{{ count }}</text>
+    <text class="meta" show="{{hasData}}">更新时间：{{ updatedAt }}</text>
+    <input
+      class="btn"
+      type="button"
+      value="{{isDownloading?'下载中...':'下载离线数据'}}"
+      disabled="{{isDownloading}}"
+      onclick="download" />
+    <input
+      class="warn-btn"
+      type="button"
+      value="清除离线数据"
+      onclick="clearData" />
+  </div>
+</template>
+
+<script>
+  import fetch from '@blueos.network.fetch'
+  import prompt from '@blueos.window.prompt'
+
+  const VERSION_URL = 'https://yiyan-delta.vercel.app/api/version'
+  const OFFLINE_URL = 'https://yiyan-delta.vercel.app/api/yiyan'
+
+  export default {
+    data: {
+      status: '尚未下载离线数据',
+      version: '',
+      count: 0,
+      updatedAt: '',
+      hasData: false,
+      isDownloading: false,
+      lastClearClick: -1,
+    },
+
+    onInit() {
+      this.loadMeta()
+      this.checkVersion()
+    },
+    loadMeta() {
+      const meta = this.$app.$def.getValue('offlineMeta', null)
+      const text = this.$app.$def.getValue('offlineText', this.$app.$def.getValue('offlineTexts', []))
+      this.count = Array.isArray(text) ? text.length : 0
+      this.hasData = this.count > 0
+      if (meta && this.hasData) {
+        this.version = meta.version || '未知'
+        this.updatedAt = meta.updatedAt || ''
+        this.status = '离线数据已就绪'
+      } else {
+        this.version = ''
+        this.updatedAt = ''
+        this.status = '尚未下载离线数据'
+      }
+    },
+    parseVersion(res) {
+      const payload = (res && res.data) || res
+      if (typeof payload === 'string') return payload.trim()
+      if (payload && typeof payload.version === 'string')
+        return payload.version.trim()
+      return ''
+    },
+    compareVersion(remote, local) {
+      const remoteParts = String(remote || '0')
+        .replace(/^v/i, '')
+        .split('.')
+      const localParts = String(local || '0')
+        .replace(/^v/i, '')
+        .split('.')
+      const length = Math.max(remoteParts.length, localParts.length)
+      for (let index = 0; index < length; index += 1) {
+        const remoteNumber = parseInt(remoteParts[index], 10) || 0
+        const localNumber = parseInt(localParts[index], 10) || 0
+        if (remoteNumber !== localNumber)
+          return remoteNumber > localNumber ? 1 : -1
+      }
+      return 0
+    },
+    checkVersion() {
+      fetch.fetch({
+        url: VERSION_URL,
+        responseType: 'json',
+        success: (res) => {
+          if (
+            res &&
+            typeof res.code === 'number' &&
+            (res.code < 200 || res.code >= 300)
+          )
+            return
+          const remoteVersion = this.parseVersion(res)
+          const localVersion =
+            this.$app.$def.getValue('offlineMeta', {}).version || ''
+          if (
+            remoteVersion &&
+            this.compareVersion(remoteVersion, localVersion) > 0
+          ) {
+            this.status = `发现新版本：${remoteVersion}，可更新`
+            prompt.showToast({ message: '发现离线数据更新' })
+          }
+        },
+      })
+    },
+    download() {
+      this.isDownloading = true
+      this.status = '正在检查版本...'
+      fetch.fetch({
+        url: VERSION_URL,
+        responseType: 'json',
+        success: (res) => {
+          if (
+            res &&
+            typeof res.code === 'number' &&
+            (res.code < 200 || res.code >= 300)
+          ) {
+            this.downloadFailed(`版本检查失败（${res.code}）`)
+            return
+          }
+          const remoteVersion = this.parseVersion(res)
+          if (!remoteVersion) {
+            this.downloadFailed('版本数据格式无效')
+            return
+          }
+          const localVersion =
+            this.$app.$def.getValue('offlineMeta', {}).version || ''
+          const versionCompare = this.compareVersion(
+            remoteVersion,
+            localVersion
+          )
+          if (localVersion && versionCompare === 0) {
+            this.isDownloading = false
+            this.status = '离线数据已是最新版本'
+            prompt.showToast({ message: '离线数据已是最新版本' })
+            return
+          }
+          this.status =
+            versionCompare > 0
+              ? `发现新版本：${remoteVersion}，正在下载...`
+              : '正在下载...'
+          fetch.fetch({
+            url: OFFLINE_URL,
+            responseType: 'json',
+            success: (dataRes) =>
+              this.saveDownloadedData(dataRes, remoteVersion),
+            fail: () => this.downloadFailed('下载失败，请检查网络'),
+          })
+        },
+        fail: () => this.downloadFailed('版本检查失败，请检查网络'),
+      })
+    },
+    saveDownloadedData(res, remoteVersion) {
+      if (
+        res &&
+        typeof res.code === 'number' &&
+        (res.code < 200 || res.code >= 300)
+      ) {
+        this.downloadFailed(`下载失败（${res.code}）`)
+        return
+      }
+      const payload = (res && res.data) || res
+      const rawText = payload && payload.text
+      const text = []
+      if (Array.isArray(rawText)) {
+        rawText.forEach((item) => {
+          const value = typeof item === 'string' ? item.trim() : ''
+          if (value && !text.includes(value)) text.push(value)
+        })
+      }
+      if (!payload || !Array.isArray(rawText) || text.length === 0) {
+        this.downloadFailed('数据格式无效')
+        return
+      }
+      const version =
+        typeof payload.version === 'string' ? payload.version : remoteVersion
+      const updatedAt = new Date().toLocaleString()
+      this.$app.$def.set('offlineText', text)
+      this.$app.$def.set('offlineTexts', text)
+      this.$app.$def.set('offlineMeta', {
+        version: version,
+        count: text.length,
+        updatedAt: updatedAt,
+      })
+      this.isDownloading = false
+      this.status = '下载完成'
+      this.loadMeta()
+      prompt.showToast({ message: `已下载${text.length}条离线数据` })
+    },
+    downloadFailed(message) {
+      this.isDownloading = false
+      this.status = message
+      this.loadMeta()
+      prompt.showToast({ message: message })
+    },
+    clearData() {
+      const now = Date.now()
+      if (now - this.lastClearClick > 500 && now - this.lastClearClick < 3000) {
+        this.$app.$def.set('offlineText', [])
+        this.$app.$def.set('offlineTexts', [])
+        this.$app.$def.set('offlineMeta', {})
+        this.lastClearClick = -1
+        this.loadMeta()
+        prompt.showToast({ message: '离线数据已清除' })
+      } else {
+        this.lastClearClick = now
+        prompt.showToast({ message: '再次点击以清除' })
+      }
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import '../../../assets/styles/global.scss';
+  .status,
+  .meta {
+    color: $grey;
+    font-size: 3.5 * $size-factor;
+    margin-top: 2 * $size-factor;
+    text-align: center;
+  }
+  .warn-btn {
+    width: 55 * $size-factor;
+    height: 12 * $size-factor;
+    border-radius: 7 * $size-factor;
+    background-color: $brand;
+    color: $red;
+    font-size: 5 * $size-factor;
+    margin-top: 7 * $size-factor;
+  }
+</style>

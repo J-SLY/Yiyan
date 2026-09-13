@@ -3,37 +3,56 @@
   export default {
     data: {
       title: '一言',
+      buttons: [
+        {
+          name: '获取一言',
+          action: 'get',
+        },
+        {
+          name: '今日一言',
+          action: 'today',
+        },
+        {
+          name: '历史记录',
+          action: 'history',
+        },
+        {
+          name: '我的收藏',
+          action: 'stars',
+        },
+        {
+          name: '设置',
+          action: 'settings',
+        },
+      ],
     },
 
     onInit() {},
-    gotoGetYiyan() {
-      router.push({
-        uri: '/pages/Detail',
-        params: {
-          type: 'get',
-          text: 'Loading...',
-        },
-      })
-    },
-    gotoToday() {
-      router.push({
-        uri: '/pages/Detail/Today',
-      })
-    },
-    gotoHistory() {
-      router.push({
-        uri: '/pages/History',
-      })
-    },
-    gotoStars() {
-      router.push({
-        uri: '/pages/Stars',
-      })
-    },
-    gotoSettings() {
-      router.push({
-        uri: '/pages/Settings',
-      })
+    handleButton(action) {
+      switch (action) {
+        case 'get':
+          router.push({
+            uri: '/pages/Detail',
+            params: {
+              type: 'get',
+            },
+          })
+          break
+        case 'today':
+          router.push({ uri: '/pages/Detail/Today' })
+          break
+        case 'history':
+          router.push({ uri: '/pages/History' })
+          break
+        case 'stars':
+          router.push({ uri: '/pages/Stars' })
+          break
+        case 'settings':
+          router.push({ uri: '/pages/Settings' })
+          break
+        default:
+          break
+      }
     },
   }
 </script>
@@ -41,18 +60,34 @@
 <template>
   <div class="wrapper">
     <text class="title">{{ title }}</text>
-    <input
-      class="btn"
-      type="button"
-      value="获取一言"
-      onclick="gotoGetYiyan()" />
-    <input class="btn" type="button" value="今日一言" onclick="gotoToday()" />
-    <input class="btn" type="button" value="历史记录" onclick="gotoHistory()" />
-    <input class="btn" type="button" value="我的收藏" onclick="gotoStars()" />
-    <input class="btn" type="button" value="设置" onclick="gotoSettings()" />
+    <list class="home-list">
+      <list-item
+        class="home-item"
+        type="button"
+        for="{{buttons}}"
+        tid="action">
+        <input
+          class="btn"
+          type="button"
+          value="{{$item.name}}"
+          @click="handleButton($item.action)" />
+      </list-item>
+    </list>
   </div>
 </template>
 
 <style lang="scss">
   @import './../../assets/styles/global.scss';
+
+  .home-list {
+    width: 100%;
+    align-items: center;
+  }
+
+  .home-item {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 </style>

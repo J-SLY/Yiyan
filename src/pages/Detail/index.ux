@@ -11,6 +11,8 @@
       tags: '',
       star: false,
       canStar: true,
+      isLoading: false,
+      isError: false,
     },
     onInit() {
       if (this.$app.$def.include('stars', this.text)) {
@@ -31,7 +33,9 @@
       this.uuid = item.uuid || ''
       this.source = item.source || ''
       this.author = item.author || ''
-      this.tags = Array.isArray(item.matchedTags) ? item.matchedTags.join('、') : ''
+      this.tags = Array.isArray(item.matchedTags)
+        ? item.matchedTags.join('、')
+        : ''
     },
     saveMetadata(item, text) {
       const record = this.$app.$def
@@ -55,7 +59,10 @@
       this.source = ''
       this.author = ''
       this.tags = ''
+      this.star = false
       this.canStar = false
+      this.isLoading = true
+      this.isError = false
       const api = this.$app.$def.getValue('sayingApi', 'random')
       fetch.fetch({
         url:
@@ -73,10 +80,11 @@
                 ? item.content
                 : payload && payload.content
           if (typeof text !== 'string' || !text) {
-            this.text = '获取失败，请重试'
-            this.canStar = false
+            this.useOffline()
             return
           }
+          this.isLoading = false
+          this.isError = false
           this.canStar = true
           const record = this.$app.$def
           this.text = text
@@ -86,17 +94,39 @@
             this.star = true
           }
         },
-        fail: () => {
-          this.text = '获取失败，请重试'
-          this.canStar = false
-        },
+        fail: () => this.useOffline(),
       })
     },
-    giveStar() {
-      const record = this.$app.$def
-      if (!this.text || this.text === 'Loading...' || this.text === '获取失败，请重试') {
-        return
+    useOffline() {
+      const text = this.$app.$def.getValue('offlineText', this.$app.$def.getValue('offlineTexts', []))
+      if (Array.isArray(text) && text.length > 0) {
+        const available = text.filter((value) => typeof value === 'string' && value)
+        if (available.length > 0) {
+          this.text = available[Math.floor(Math.random() * available.length)]
+          this.uuid = ''
+          this.source = ''
+          this.author = ''
+          this.tags = ''
+          this.isLoading = false
+          this.isError = false
+          this.canStar = true
+          this.saveOfflineHistory()
+          return
+        }
       }
+      this.text = '获取失败，请重试'
+      this.isLoading = false
+      this.isError = true
+      this.canStar = false
+    },
+    saveOfflineHistory() {
+      const record = this.$app.$def
+      record.push('history', this.text)
+      this.star = record.include('stars', this.text)
+    },
+    giveStar() {
+      if (!this.canStar) return
+      const record = this.$app.$def
       if (record.include('stars', this.text)) {
         const stars = record.get('stars')
         record.dele('stars', stars.indexOf(this.text))
@@ -118,6 +148,9 @@
 <template>
   <div class="wrapper">
     <text class="text">{{ text }}</text>
+    <text class="meta" show="{{isError}}">
+      Tips: 可以前往设置下载离线数据哦
+    </text>
     <text class="meta" show="{{source!=''}}">出处：{{ source }}</text>
     <text class="meta" show="{{author!=''}}">作者：{{ author }}</text>
     <text class="meta" show="{{tags!=''}}">标签：{{ tags }}</text>
@@ -126,7 +159,7 @@
       class="btn"
       value="换一条"
       show="{{type=='get'}}"
-      disabled="{{text=='Loading...'}}"
+      disabled="{{isLoading}}"
       @click="getYiyan" />
     <input
       type="button"

@@ -1,7 +1,7 @@
 {
   "package": "com.jsly.watch.yiyan.ng",
   "name": "一言",
-  "versionName": "1.3.2-Beta",
+  "versionName": "1.5.0-Beta",
   "versionCode": 16,
   "appCategory": [
     "other"
@@ -52,6 +52,9 @@
         "component": "index"
       },
       "pages/Detail/Today": {
+        "component": "index"
+      },
+      "pages/Settings/Offline": {
         "component": "index"
       }
     }
