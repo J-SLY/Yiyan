@@ -5,6 +5,10 @@
     data: {
       type: '',
       text: '',
+      uuid: '',
+      source: '',
+      author: '',
+      tags: '',
       star: false,
       canStar: true,
     },
@@ -14,24 +18,69 @@
       }
       if (this.type === 'get') {
         this.getYiyan()
+      } else {
+        this.loadMetadata()
       }
+    },
+    loadMetadata() {
+      const metadata = this.$app.$def.getValue('sayingMeta', [])
+      const item = metadata.find((value) => value.content === this.text)
+      if (item) this.applyMetadata(item)
+    },
+    applyMetadata(item) {
+      this.uuid = item.uuid || ''
+      this.source = item.source || ''
+      this.author = item.author || ''
+      this.tags = Array.isArray(item.matchedTags) ? item.matchedTags.join('、') : ''
+    },
+    saveMetadata(item, text) {
+      const record = this.$app.$def
+      const metadata = record.getValue('sayingMeta', [])
+      const next = {
+        uuid: typeof item.uuid === 'string' ? item.uuid : '',
+        content: text,
+        source: typeof item.source === 'string' ? item.source : '',
+        author: typeof item.author === 'string' ? item.author : '',
+        matchedTags: Array.isArray(item.matchedTags) ? item.matchedTags : [],
+      }
+      const index = metadata.findIndex((value) => value.content === text)
+      if (index >= 0) metadata[index] = next
+      else metadata.push(next)
+      record.set('sayingMeta', metadata)
+      this.applyMetadata(next)
     },
     getYiyan() {
       this.text = 'Loading...'
+      this.uuid = ''
+      this.source = ''
+      this.author = ''
+      this.tags = ''
       this.canStar = false
+      const api = this.$app.$def.getValue('sayingApi', 'random')
       fetch.fetch({
-        url: 'https://uapis.cn/api/v1/saying',
+        url:
+          api === 'legacy'
+            ? 'https://uapis.cn/api/v1/saying'
+            : 'https://uapis.cn/api/v1/saying/random?mode=random',
         responseType: 'json',
         success: (res) => {
-          if (!res || !res.data || typeof res.data.text !== 'string') {
+          const payload = (res && res.data) || res
+          const item = payload && payload.item
+          const text =
+            api === 'legacy'
+              ? payload && payload.text
+              : item
+                ? item.content
+                : payload && payload.content
+          if (typeof text !== 'string' || !text) {
             this.text = '获取失败，请重试'
             this.canStar = false
             return
           }
           this.canStar = true
           const record = this.$app.$def
-          const text = res.data.text
           this.text = text
+          this.saveMetadata(item || payload, text)
           record.push('history', text)
           if (record.include('stars', text)) {
             this.star = true
@@ -69,6 +118,9 @@
 <template>
   <div class="wrapper">
     <text class="text">{{ text }}</text>
+    <text class="meta" show="{{source!=''}}">出处：{{ source }}</text>
+    <text class="meta" show="{{author!=''}}">作者：{{ author }}</text>
+    <text class="meta" show="{{tags!=''}}">标签：{{ tags }}</text>
     <input
       type="button"
       class="btn"
@@ -87,4 +139,11 @@
 
 <style lang="scss">
   @import './../../assets/styles/global.scss';
+  .meta {
+    width: 88%;
+    color: $grey;
+    font-size: 3.5 * $size-factor;
+    margin-top: 1 * $size-factor;
+    text-align: center;
+  }
 </style>

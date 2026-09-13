@@ -15,13 +15,16 @@
       })
     },
     get(key) {
+      const data = this.getValue(key, [])
+      return Array.isArray(data) ? data : []
+    },
+    getValue(key, fallback) {
       const value = storage.getSync({ key: key })
-      if (value == '') return []
+      if (value == '') return fallback
       try {
-        const data = JSON.parse(value)
-        return Array.isArray(data) ? data : []
+        return JSON.parse(value)
       } catch (e) {
-        return []
+        return fallback
       }
     },
     push(key, value) {

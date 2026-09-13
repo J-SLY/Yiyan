@@ -1,0 +1,54 @@
+<template>
+  <div class="wrapper">
+    <text class="title">内容选择</text>
+    <div class="option" onclick="selectApi('random')">
+      <input
+        type="radio"
+        name="sayingApi"
+        checked="{{api=='random'}}"
+        onchange="selectApi('random')" />
+      <text class="option-text">详细</text>
+    </div>
+    <div class="option" onclick="selectApi('legacy')">
+      <input
+        type="radio"
+        name="sayingApi"
+        checked="{{api=='legacy'}}"
+        onchange="selectApi('legacy')" />
+      <text class="option-text">精简</text>
+    </div>
+  </div>
+</template>
+
+<script>
+  import prompt from '@blueos.window.prompt'
+  export default {
+    data: {
+      api: 'random',
+    },
+    onInit() {
+      const value = this.$app.$def.getValue('sayingApi', 'random')
+      this.api = value === 'legacy' ? 'legacy' : 'random'
+    },
+    selectApi(value) {
+      this.api = value === 'legacy' ? 'legacy' : 'random'
+      this.$app.$def.set('sayingApi', this.api)
+      prompt.showToast({ message: '接口设置已保存' })
+    },
+  }
+</script>
+
+<style lang="scss">
+  @import '../../../assets/styles/global.scss';
+  .option {
+    display: flex;
+    align-items: center;
+    width: 85%;
+    margin-top: 5 * $size-factor;
+  }
+  .option-text {
+    color: $white;
+    font-size: 4 * $size-factor;
+    margin-left: 2 * $size-factor;
+  }
+</style>

@@ -1,7 +1,7 @@
 <template>
   <div class="wrapper">
     <text class="title">设置</text>
-
+    <input class="btn" type="button" value="内容模式" onclick="gotoApi" />
     <input class="btn" type="button" value="清除数据" onclick="gotoClear" />
   </div>
 </template>
@@ -11,6 +11,9 @@
   export default {
     data: {},
     onInit() {},
+    gotoApi() {
+      router.push({ uri: '/pages/Settings/Api' })
+    },
     gotoClear() {
       router.push({ uri: '/pages/Settings/Clear' })
     },

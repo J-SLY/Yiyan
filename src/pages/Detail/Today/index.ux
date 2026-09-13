@@ -1,19 +1,149 @@
-<template>
-  <div class="wrapper">
-    <text class="title">{{ title }}</text>
-  </div>
-</template>
-
 <script>
+  import fetch from '@blueos.network.fetch'
+  import prompt from '@blueos.window.prompt'
+
   export default {
     data: {
-      title: '👏欢迎体验应用开发',
+      content: '',
+      source: '',
+      author: '',
+      date: '',
+      status: 'loading',
+      isStarred: false,
+      canStar: false,
     },
 
-    onInit() {},
+    onInit() {
+      this.loadToday(false)
+    },
+
+    todayString() {
+      const now = new Date()
+      const month = now.getMonth() + 1
+      const day = now.getDate()
+      return `${now.getFullYear()}-${month < 10 ? '0' : ''}${month}-${day < 10 ? '0' : ''}${day}`
+    },
+
+    loadToday(force) {
+      const record = this.$app.$def
+      const cache = record.getValue('todaySaying', null)
+      const today = this.todayString()
+      if (!force && cache && cache.date == today && cache.content) {
+        this.applySaying(cache)
+        return
+      }
+      this.status = 'loading'
+      fetch.fetch({
+        url: 'https://uapis.cn/api/v1/saying/random?mode=daily',
+        responseType: 'json',
+        success: (res) => {
+          const payload = (res && res.data) || res
+          const item = payload && (payload.item || payload)
+          if (!item || typeof item.content !== 'string' || !item.content) {
+            this.useCacheOrFail(cache)
+            return
+          }
+          const saying = {
+            date: typeof payload.date == 'string' ? payload.date : today,
+            content: item.content,
+            source: typeof item.source == 'string' ? item.source : '',
+            author: typeof item.author == 'string' ? item.author : '',
+          }
+          record.set('todaySaying', saying)
+          this.applySaying(saying)
+          if (!record.include('history', saying.content)) record.push('history', saying.content)
+        },
+        fail: () => this.useCacheOrFail(cache),
+      })
+    },
+
+    applySaying(saying) {
+      this.content = saying.content || ''
+      this.source = saying.source || ''
+      this.author = saying.author || ''
+      this.date = saying.date || this.todayString()
+      this.status = this.content ? 'ready' : 'error'
+      this.updateStarState()
+    },
+
+    useCacheOrFail(cache) {
+      if (cache && cache.content) {
+        this.applySaying(cache)
+        prompt.showToast({ message: '网络不可用，已显示缓存' })
+      } else {
+        this.status = 'error'
+        this.canStar = false
+      }
+    },
+
+    updateStarState() {
+      this.canStar = !!this.content
+      this.isStarred = this.$app.$def.include('stars', this.content)
+    },
+
+    retry() {
+      this.loadToday(true)
+    },
+
+    giveStar() {
+      if (!this.canStar) return
+      const record = this.$app.$def
+      if (record.include('stars', this.content)) {
+        const stars = record.get('stars')
+        record.dele('stars', stars.indexOf(this.content))
+        this.isStarred = false
+        prompt.showToast({ message: '取消收藏成功' })
+      } else {
+        record.push('stars', this.content)
+        this.isStarred = true
+        prompt.showToast({ message: '已收藏成功' })
+      }
+    },
   }
 </script>
 
+<template>
+  <div class="wrapper">
+    <text class="title">今日一言</text>
+    <text class="date" show="{{status=='ready'}}">{{ date }}</text>
+    <text class="text" show="{{status=='ready'}}">{{ content }}</text>
+    <text class="meta" show="{{status=='ready' && source!=''}}">出处：{{ source }}</text>
+    <text class="meta" show="{{status=='ready' && author!=''}}">作者：{{ author }}</text>
+    <text class="state" show="{{status=='loading'}}">正在获取今日一言...</text>
+    <text class="state error" show="{{status=='error'}}">获取失败，请检查网络后重试</text>
+    <input class="btn" type="button" value="刷新今日一言" disabled="{{status=='loading'}}" onclick="retry" />
+    <input class="btn" type="button" value="{{isStarred?'取消收藏':'收藏'}}" disabled="{{!canStar}}" onclick="giveStar" />
+  </div>
+</template>
+
 <style lang="scss">
   @import '../../../assets/styles/global.scss';
+  .date {
+    color: $grey;
+    font-size: 4 * $size-factor;
+    margin-top: 2 * $size-factor;
+  }
+  .meta {
+    color: $grey;
+    font-size: 3.5 * $size-factor;
+    margin-top: 1 * $size-factor;
+    text-align: center;
+  }
+  .state {
+    color: $grey;
+    font-size: 4 * $size-factor;
+    margin-top: 8 * $size-factor;
+  }
+  .error {
+    color: $red;
+  }
+  .text {
+    width: 88%;
+    lines: 6;
+    font-size: 5 * $size-factor;
+    line-height: 7 * $size-factor;
+    text-align: center;
+    color: $white;
+    margin-top: 5 * $size-factor;
+  }
 </style>
