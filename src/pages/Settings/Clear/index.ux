@@ -2,7 +2,7 @@
   <div class="wrapper">
     <text class="title">清除数据</text>
     <input
-      class="warn-btn"
+      class="btn"
       type="button"
       value="！清空历史！"
       onclick="clear('history')" />
