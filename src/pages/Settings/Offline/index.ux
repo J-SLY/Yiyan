@@ -23,8 +23,8 @@
   import fetch from '@blueos.network.fetch'
   import prompt from '@blueos.window.prompt'
 
-  const VERSION_URL = 'https://yiyan-delta.vercel.app/api/version'
-  const OFFLINE_URL = 'https://yiyan-delta.vercel.app/api/yiyan'
+  const VERSION_URL = 'https://yiyan.jsly.asia/api/version'
+  const OFFLINE_URL = 'https://yiyan.jsly.asia/api/yiyan'
 
   export default {
     data: {
@@ -43,7 +43,10 @@
     },
     loadMeta() {
       const meta = this.$app.$def.getValue('offlineMeta', null)
-      const text = this.$app.$def.getValue('offlineText', this.$app.$def.getValue('offlineTexts', []))
+      const text = this.$app.$def.getValue(
+        'offlineText',
+        this.$app.$def.getValue('offlineTexts', [])
+      )
       this.count = Array.isArray(text) ? text.length : 0
       this.hasData = this.count > 0
       if (meta && this.hasData) {
